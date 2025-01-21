@@ -9,11 +9,20 @@ interface Props {
 }
 
 const IssueDetailPage = async ({ params }: Props) => {
-  // if(typeof params.id !== 'number') notFound();
+  // Asynchronously unwrap params
+  const { id } = await params;
+  // Parse and validate id
+  const issueId = parseInt(id, 10);
+  if (isNaN(issueId)) {
+    notFound(); // Redirect to 404 if id is invalid
+  }
+    
+  // Fetch the issue from the database
   const issue = await prisma.issue.findUnique({
-    where: { id: parseInt(params.id) },
+    where: { id: issueId },
   });
-  if (!issue) notFound();
+  if (!issue) notFound(); //Redirect to 404 if no issue is found
+  // Optional delay for demonstration purposes
   await delay(2000);
 
   return (
