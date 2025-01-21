@@ -2,7 +2,7 @@ import React from 'react'
 
 const LoadingNewIssuePage = () => {
   return (
-    <div>Loadin...</div>
+    <div>Loading...</div>
   )
 }
 
