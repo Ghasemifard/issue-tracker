@@ -1,7 +1,7 @@
 "use client";
 import ErrorMessage from "@/app/components/ErrorMessage";
 import Spinner from "@/app/components/Spinner";
-import { createIssueSchema } from "@/app/validationSchemas";
+import { issueSchema } from "@/app/validationSchemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Issue } from "@prisma/client";
 import { Button, Callout, TextField } from "@radix-ui/themes";
@@ -16,21 +16,21 @@ import { z } from "zod";
 const SimpleMDE = dynamic(() => import("react-simplemde-editor"), {
   ssr: false,
 });
-type IssueFormData = z.infer<typeof createIssueSchema>;
+type IssueFormData = z.infer<typeof issueSchema>;
 
-interface Props{
-    issue?: Issue
+interface Props {
+  issue?: Issue;
 }
 
-const IssueForm = ({issue}:{issue?:Issue}) => {
+const IssueForm = ({ issue }: { issue?: Issue }) => {
   const router = useRouter();
   const {
     register,
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<IssueForm>({
-    resolver: zodResolver(createIssueSchema),
+  } = useForm<IssueFormData>({
+    resolver: zodResolver(issueSchema),
   });
 
   const [error, setError] = useState("");
@@ -39,11 +39,11 @@ const IssueForm = ({issue}:{issue?:Issue}) => {
   const onSubmit = handleSubmit(async (data) => {
     try {
       setIsSubmitting(true);
-      await axios.post("/api/issues", data);
+      if (issue) await axios.patch("/api/issues/" + issue.id, data);
+      else await axios.post("/api/issues", data);
       router.push("/issues");
     } catch (error) {
       setIsSubmitting(false);
-      // console.log(error);
       setError("An unexpected error occurred");
     }
   });
@@ -56,9 +56,15 @@ const IssueForm = ({issue}:{issue?:Issue}) => {
         </Callout.Root>
       )}
       <form className="space-y-3" onSubmit={onSubmit}>
-        <TextField.Root placeholder="Title" defaultValue={issue?.title}>
-          <TextField.Slot {...register("title")} />
-        </TextField.Root>
+        <Controller
+          name="title"
+          control={control}
+          defaultValue={issue?.title || ""}
+          rules={{ required: "Title is required" }} // Ensure validation rule is applied
+          render={({ field }) => (
+            <TextField.Root {...field} placeholder="Enter title" />
+          )}
+        />
         <ErrorMessage>{errors.title?.message}</ErrorMessage>
         <Controller
           name="description"
@@ -71,7 +77,8 @@ const IssueForm = ({issue}:{issue?:Issue}) => {
         <ErrorMessage>{errors.description?.message}</ErrorMessage>
 
         <Button disabled={isSubmitting}>
-          Submit New Issue{isSubmitting && <Spinner></Spinner>}
+          {issue ? "Update Issue" : "Submit New Issue"}{" "}
+          {isSubmitting && <Spinner />}
         </Button>
       </form>
     </div>
