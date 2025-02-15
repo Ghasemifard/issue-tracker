@@ -5,13 +5,12 @@ import EditIssueButton from "./EditIssueButton";
 import IssueDetails from "./IssueDetails";
 
 interface Props {
-  params: { id: string };
-}
+  params: Promise<{ id: string }>; // Declare params as a Promise :cite[3]:cite[10]
+};
 
 const IssueDetailPage = async ({ params }: Props) => {
-  const { id } = await params;
-
-  const issueId = parseInt(id, 10);
+  const resolvedParams = await params; // Resolve the promise
+  const issueId = parseInt(resolvedParams.id, 10);
   if (isNaN(issueId)) {
     notFound();
   }
